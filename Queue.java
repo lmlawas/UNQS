@@ -26,4 +26,29 @@ public class Queue extends LinkedList<Packet>{
 		this.priority = priority;
 	}
 
+	// methods
+	public Queue updateWaitAndTimeout(int schedule){
+
+		Queue promote = new Queue(this.priority);
+
+		int i, n = this.size();
+
+		for(i = 0; i < n; i++){
+			Packet p = this.remove(i);				// get ith packet
+			p.wait_time++;							// increment wait time
+			p.timeout--;							// decrement timeout
+
+			if(schedule == Schedule.WFQ && p.wait_time % 50 == 0){
+				promote.add(p);						// if schedule is WFQ and weight for higher priority is reached
+			}
+			else if(p.timeout > 0){
+				add(i, p);							// if packet is not yet timed out
+			}			
+			else{
+				packet_loss_cnt++;
+			}
+		}
+
+		return promote;
+	}
 }
