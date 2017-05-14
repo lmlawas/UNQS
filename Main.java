@@ -21,6 +21,7 @@ public class Main{
 		Configuration config = new Configuration();
 		config.setDefault();
 
+		/* use default configuration */
 		if(args.length == 0){
 			do{
 				System.out.print("Continue with the default configuration? (Y/N) ");
@@ -67,5 +68,31 @@ public class Main{
 			config.show();
 		}
 
-	}
+		/* connect to database */
+		System.out.println("-------------------------------");	
+    	System.out.print("\nConnecting to database...");
+        try {
+
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection con = DriverManager.getConnection("jdbc:mysql://"+ config.getIpAddress() + ":" + config.getPortNumber() + "/" + config.getDbName(), config.getUsername(), config.getPassword());
+            Schedule sched = new Schedule( config.getSchedule(), config.getBandwidth() );
+            Statement stmt = con.createStatement();
+            LinkedList<Queue> queues = new LinkedList<Queue>();
+            ResultSet ts = stmt.executeQuery("select MIN(FIRST_SWITCHED), MAX(FIRST_SWITCHED) from `flows-" + config.getDatestamp() + "v4_" + config.getInterfaceName() + "`;");
+            ts.next();            
+            int first = ts.getInt(1),
+            	last = ts.getInt(2),
+            	t, 
+            	total_bytes = 0;
+            boolean added = false;
+
+            System.out.print("successfully connected.\n");
+        }catch (Exception e) {
+        	System.out.print("error connecting.\n");
+        	System.out.println(e);
+            e.printStackTrace();
+        }
+
+	}// end of main function
+
 }

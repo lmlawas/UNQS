@@ -2,14 +2,14 @@ import java.util.LinkedList;
 
 public class Queue extends LinkedList<Packet>{
 
-	// attributes
+	/* Attributes */
 	public double current_buffer_size;
 	public int packet_loss_cnt;
 	public int packet_swicthed_cnt;
 	public int packet_wait_cnt;
 	public int priority;
 
-	// constructors
+	/* Constructors */
 	public Queue(){
 		current_buffer_size = 0;
 		packet_loss_cnt = 0;
@@ -26,7 +26,7 @@ public class Queue extends LinkedList<Packet>{
 		this.priority = priority;
 	}
 
-	// methods
+	/* Methods*/
 	public Queue updateWaitAndTimeout(int schedule){
 
 		Queue promote = new Queue(this.priority);

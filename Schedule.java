@@ -2,16 +2,16 @@ import java.util.LinkedList;
 
 public class Schedule{
 
-	// constants
+	/* Constants */
 	final public static int FIFO = 0;
 	final public static int PQ = 1;
 	final public static int WFQ = 2;
 
-	// attributes
+	/* Attributes */
 	public int schedule_type;
 	public double bandwidth;
 
-	// constructors
+	/* Constructors */
 	public Schedule(){
 		schedule_type = FIFO;
 		bandwidth = 125000000; // 125 Megabytes per second or 1 Gigabit per second
@@ -22,6 +22,7 @@ public class Schedule{
 		this.bandwidth = bandwidth;
 	}
 
+	/* Methods */
 	public void process(LinkedList<Queue> queues){
 		
 		if(schedule_type == FIFO){

@@ -1,14 +1,14 @@
 
 public class Packet{
 	
-	// attributes
+	/* Attributes */
 	public int id;
 	public int priority;
 	public double size;
 	public int timeout;
 	public int wait_time;
 
-	// constructors
+	/* Constructors */
 	public Packet(){		
 	}
 
