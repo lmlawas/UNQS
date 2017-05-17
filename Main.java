@@ -113,31 +113,34 @@ public class Main{
 	            	if( flow.next() != false ){		// if a match or matches to time t is found
 	            		while( flow.next() ){		// for all matches
 
-	            			// assign priority
-	            			int pri = getPriority(p.protocol, config.getSchedule());
-
 	            			// create packets from flow data
-	            			LinkedList<Packet> packets = createPackets(flow, pri);
+	            			LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), config.getTimeout(), config.getSchedule());
 
 	            			// add packets to appropriate queue
 							for(Packet p: packets){
-								Queue q = queues.remove(pri);
+								Queue q = queues.remove(p.priority);
 								q.add(p);
-								queues.add(pri, q);
+								queues.add(p.priority, q);
 							}
 	            		}
 	            	}
             	}
             	
             	// process high priority queue
+            	sched.process(queues);
 
             	// check if queues are not empty
-            	empty = queues.get(0).isEmpty();
+            	for(int priority=2; priority>=0; priority--){
+            		empty = queues.get(priority).isEmpty();
+            		if(!empty){
+            			break;
+            		}
+            	}
 
-            	// 'tick'
+            	// increment time
             	t++;
 
-            }while(empty);// while queues are not empty 
+            }while(!empty);// while queues are not empty 
             System.out.print("done.\n");
 
             /* Summarize network performance metrics */
@@ -148,6 +151,18 @@ public class Main{
             e.printStackTrace();
         }
 
-	}// end of main function
+	}// end of main function	
+
+	public static LinkedList<Packet> createPackets(int idx, double size, int no_of_packets, int protocol, int timeout, int schedule_type){
+		LinkedList<Packet> packets = new LinkedList<Packet>();
+
+		for(int i=0; i<no_of_packets; i++){
+			Packet p = new Packet(idx, 0, protocol, size/no_of_packets, timeout, 0);
+			p.priority = p.getPriority(schedule_type);
+			packets.add(p);
+		}
+
+		return packets;
+	}
 
 }

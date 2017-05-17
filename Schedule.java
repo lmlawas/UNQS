@@ -45,7 +45,7 @@ public class Schedule{
 			return;
 		}// end of FIFO
 
-		else if(schedule_type == PQ){
+		else if(schedule_type == PQ || schedule_type == WFQ){
 
 			boolean previous_is_empty = true;
 			int i;
@@ -75,16 +75,17 @@ public class Schedule{
 					previous_is_empty = true;
 				}
 
-				q.updateWaitAndTimeout(schedule_type);	// update wait_time and timeout of packets in queue 'q'
+				// update wait_time and timeout of packets in queue 'q'
+				LinkedList<Packet> promote = q.updateWaitAndTimeout(schedule_type);
+
+				if(schedule_type == WFQ && !promote.isEmpty() ){
+					// add promote to higher priority queue
+				}
 
 				queues.add(i, q);						// re-add queue with priority i
 			}
 
-		}// end of PQ
-
-		else if(schedule_type == WFQ){
-
-		}
+		}// end of PQ & WFQ
 
 	}
 }

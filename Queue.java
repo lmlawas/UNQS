@@ -27,7 +27,7 @@ public class Queue extends LinkedList<Packet>{
 	}
 
 	/* Methods*/
-	public Queue updateWaitAndTimeout(int schedule){
+	public Queue updateWaitAndTimeout(int schedule_type){
 
 		Queue promote = new Queue(this.priority);
 
@@ -38,9 +38,10 @@ public class Queue extends LinkedList<Packet>{
 			p.wait_time++;							// increment wait time
 			p.timeout--;							// decrement timeout
 
-			if(schedule == Schedule.WFQ && p.wait_time % 50 == 0){
-				promote.add(p);						// if schedule is WFQ and weight for higher priority is reached
+			if(schedule_type == Schedule.WFQ && p.wait_time % 50 == 0){
+				promote.add(p);						// if schedule_type is WFQ and weight for higher priority is reached
 			}
+
 			else if(p.timeout > 0){
 				add(i, p);							// if packet is not yet timed out
 			}			

@@ -69,7 +69,7 @@ public class Configuration{
 		return bandwidth;
 	}
 	
-	double getTimeout(){
+	int getTimeout(){
 		return timeout;
 	}
 
