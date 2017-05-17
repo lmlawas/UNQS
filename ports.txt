@@ -1,34 +1,34 @@
 0
-22
-53
-67
-68
-80
-123
-137
-138
-427
-445
+22		SSH
+53 		DNS
+67 		BOOTP/DHCP
+68 		BOOTP/DHCP
+80		HTTP
+123 	Network Time Protocol
+137 	NetBIOS Name Service
+138 	NetBIOS Datagram Service
+427 	Service Location Protocol
+445		Microsoft-DS
 1124
 1435
-1900
+1900 	Simple Service Discovery Protocol
 3289
-3544
-3702
+3544 	Teredo tunneling
+3702 	Web Services Dynamic Discovery
 3838
-4090
-5060
-5353
-5355
-5357
-6771
+4090	Kerio
+5060 	Session Initiation Protocol
+5353	Multicast DNS
+5355	Link-Local Multicast Name Resolution
+5357 	Web Services for Devices
+6771 	Polycom server broadcast [[unofficial
 7533
 7680
-8000
+8000 	Internet radio streams
 8610
 8612
-17500
-27036
+17500	Dropbox LanSync Protocol
+27036	Steam, In-Home Streaming (LAN only) [[unofficial
 32966
 32971
 33042

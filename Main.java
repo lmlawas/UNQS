@@ -75,18 +75,73 @@ public class Main{
 
             Class.forName("com.mysql.jdbc.Driver");
             Connection con = DriverManager.getConnection("jdbc:mysql://"+ config.getIpAddress() + ":" + config.getPortNumber() + "/" + config.getDbName(), config.getUsername(), config.getPassword());
-            Schedule sched = new Schedule( config.getSchedule(), config.getBandwidth() );
-            Statement stmt = con.createStatement();
-            LinkedList<Queue> queues = new LinkedList<Queue>();
-            ResultSet ts = stmt.executeQuery("select MIN(FIRST_SWITCHED), MAX(FIRST_SWITCHED) from `flows-" + config.getDatestamp() + "v4_" + config.getInterfaceName() + "`;");
-            ts.next();            
-            int first = ts.getInt(1),
-            	last = ts.getInt(2),
-            	t, 
-            	total_bytes = 0;
-            boolean added = false;
 
             System.out.print("successfully connected.\n");
+            
+            Statement stmt = con.createStatement();
+            LinkedList<Queue> queues = new LinkedList<Queue>();
+            ResultSet time = stmt.executeQuery("select MIN(FIRST_SWITCHED), MAX(FIRST_SWITCHED) from `flows-" + config.getDatestamp() + "v4_" + config.getInterfaceName() + "`;");
+            time.next();
+            boolean empty = false;
+            int first = time.getInt(1),
+            	last = time.getInt(2),
+            	t = first;           
+
+            /* Convert bps to Bpt */
+            // 1b/s * 1B/8b * 0.000000015s/t
+            double bandwidth_Bpt = config.getBandwidth() * (0.000000015/8);
+            Schedule sched = new Schedule( config.getSchedule(), bandwidth_Bpt );
+
+            /* Create queues */
+            System.out.print("Creating queues...");
+            for(int i=0; i<3; i++){
+        		queues.add( new Queue(i) );
+            }
+            System.out.print("done.\n");
+
+            /* Schedule packets */
+            System.out.print("Scheduling packets...");
+            do{
+            	// check if there are still packets to be added to the queues
+            	if(t <= last){
+            		Statement stmt1 = con.createStatement();
+					ResultSet flow = stmt1.executeQuery("select idx, BYTES, PACKETS, FIRST_SWITCHED, L4_DST_PORT from `flows-" + 
+						config.getDatestamp() + "v4_" + 
+						config.getInterfaceName() + 
+						"` where FIRST_SWITCHED=" + t + "");
+
+	            	if( flow.next() != false ){		// if a match or matches to time t is found
+	            		while( flow.next() ){		// for all matches
+
+	            			// assign priority
+	            			int pri = getPriority(p.protocol, config.getSchedule());
+
+	            			// create packets from flow data
+	            			LinkedList<Packet> packets = createPackets(flow, pri);
+
+	            			// add packets to appropriate queue
+							for(Packet p: packets){
+								Queue q = queues.remove(pri);
+								q.add(p);
+								queues.add(pri, q);
+							}
+	            		}
+	            	}
+            	}
+            	
+            	// process high priority queue
+
+            	// check if queues are not empty
+            	empty = queues.get(0).isEmpty();
+
+            	// 'tick'
+            	t++;
+
+            }while(empty);// while queues are not empty 
+            System.out.print("done.\n");
+
+            /* Summarize network performance metrics */
+
         }catch (Exception e) {
         	System.out.print("error connecting.\n");
         	System.out.println(e);
