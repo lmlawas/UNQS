@@ -14,7 +14,7 @@ public class CountPorts{
 		try {
 
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/thesis", "root", "pArkEr09");
+			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/thesis", "root", args[0]);
 
 			System.out.print("successfully connected.\n");
 
