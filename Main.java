@@ -143,7 +143,36 @@ public class Main{
             }while(!empty);// while queues are not empty 
             System.out.print("done.\n");
 
+            /* Compute the network performance metrics */
+            double tbs = 0, total_wait_time = 0;
+            int tpl = 0, tps = 0, tpw = 0;
+            for(Queue q: queues){
+            	tbs = tbs + (q.total_buffer_size*8);	// convert bytes to bits then add to tbs
+            	tpl = tpl + q.packet_loss_cnt;
+            	tps = tps + q.packet_swicthed_cnt;
+            	tpw = tpw + q.packet_wait_cnt;
+            	total_wait_time = total_wait_time + q.total_wait_time;
+            }
+            double duration = (t*0.000000015);			// convert ticks to seconds
+            double throughput = tbs/duration;            
+
+            Statement stmt2 = con.createStatement();
+            ResultSet ave_packet_size = stmt2.executeQuery("select SUM(BYTES), SUM(PACKETS) from `flows-" + config.getDatestamp() + "v4_" + config.getInterfaceName() + "`;");
+            ave_packet_size.next();
+
             /* Summarize network performance metrics */
+            System.out.println("\n-------------------------------");
+            System.out.println("Bandwidth:\t" + config.getBandwidth() + " bps");
+            System.out.println("Duration:\t" + duration + " seconds");
+            System.out.println("Throughput:\t" + throughput + " bps");
+            System.out.println("Count packets...");
+            System.out.println("\t...lost:\t" + tpl + " packets (" + ((double)tpl*100/(double)(tpl+tps+tpw)) +"%)");
+            System.out.println("\t...switched:\t" + tps + " packets (" + ((double)tps*100/(double)(tpl+tps+tpw)) +"%)");
+            System.out.println("\t...waited:\t" + tpw + " packets (" + ((double)tpw*100/(double)(tpl+tps+tpw)) +"%)");
+            System.out.println("Average packet...");
+            System.out.println("\t...size:\t" + (ave_packet_size.getDouble(1)/ave_packet_size.getDouble(2)) + " bits");
+            System.out.println("\t...wait time:\t" + (total_wait_time/(double)tpw) + " seconds");
+
 
         }catch (Exception e) {
         	System.out.print("error connecting.\n");

@@ -38,6 +38,11 @@ public class Schedule{
 			}
 			else{
 				q.packet_swicthed_cnt++;		// else, packet is successfully switched
+				q.total_buffer_size = q.total_buffer_size + p.size; // store total bytes
+				if(p.wait_time > 0){
+					q.packet_wait_cnt++;		// update count for total packets that waited
+					q.total_wait_time = q.total_wait_time + p.wait_time;	// add wait time
+				}
 			}
 
 			queues.add(0, q);					// re-add queue with priority 0
@@ -65,6 +70,11 @@ public class Schedule{
 					}
 					else{
 						q.packet_swicthed_cnt++;		// else, packet is successfully switched
+						q.total_buffer_size = q.total_buffer_size + p.size; // store total bytes
+						if(p.wait_time > 0){
+							q.packet_wait_cnt++;		// update count for total packets that waited
+							q.total_wait_time = q.total_wait_time + p.wait_time;	// add wait time
+						}
 					}
 
 					if(!q.isEmpty()){
@@ -75,14 +85,21 @@ public class Schedule{
 					previous_is_empty = true;
 				}
 
+				queues.add(i, q);						// re-add queue with priority i
+
 				// update wait_time and timeout of packets in queue 'q'
 				LinkedList<Packet> promote = q.updateWaitAndTimeout(schedule_type);
 
-				if(schedule_type == WFQ && !promote.isEmpty() ){
-					// add promote to higher priority queue
-				}
+				if(schedule_type == WFQ && !promote.isEmpty() && i < 2){
 
-				queues.add(i, q);						// re-add queue with priority i
+					q = queues.remove(i+1);				// get higher priority queue
+					
+					for(Packet p: promote){
+						q.add(p);						// promote packets to higher priority queue
+					}
+
+					queues.add(i+1, q);					// re-add queue with priority i+1
+				}				
 			}
 
 		}// end of PQ & WFQ

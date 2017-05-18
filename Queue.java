@@ -3,27 +3,30 @@ import java.util.LinkedList;
 public class Queue extends LinkedList<Packet>{
 
 	/* Attributes */
-	public double current_buffer_size;
+	public double total_buffer_size;
 	public int packet_loss_cnt;
 	public int packet_swicthed_cnt;
 	public int packet_wait_cnt;
 	public int priority;
+	public int total_wait_time;
 
 	/* Constructors */
 	public Queue(){
-		current_buffer_size = 0;
+		total_buffer_size = 0;
 		packet_loss_cnt = 0;
 		packet_swicthed_cnt = 0;
 		packet_wait_cnt = 0;
 		priority = 2;
+		total_wait_time = 0;
 	}
 
 	public Queue(int priority){
-		current_buffer_size = 0;
+		total_buffer_size = 0;
 		packet_loss_cnt = 0;
 		packet_swicthed_cnt = 0;
 		packet_wait_cnt = 0;
 		this.priority = priority;
+		total_wait_time = 0;
 	}
 
 	/* Methods*/
@@ -31,10 +34,10 @@ public class Queue extends LinkedList<Packet>{
 
 		Queue promote = new Queue(this.priority);
 
-		int i, n = this.size();
+		int i, j = 0, n = this.size();
 
 		for(i = 0; i < n; i++){
-			Packet p = this.remove(i);				// get ith packet
+			Packet p = this.remove(j);				// get jth packet
 			p.wait_time++;							// increment wait time
 			p.timeout--;							// decrement timeout
 
@@ -43,7 +46,8 @@ public class Queue extends LinkedList<Packet>{
 			}
 
 			else if(p.timeout > 0){
-				add(i, p);							// if packet is not yet timed out
+				add(j, p);							// if packet is not yet timed out
+				j++;								// update j
 			}			
 			else{
 				packet_loss_cnt++;
