@@ -131,6 +131,9 @@ public class Main{
             	
             	// process high priority queue
             	sched.process(queues);
+            	if(config.getDebug()){
+            		sched.status(queues, t);
+            	}            	
 
             	// check if queues are not empty
             	for(int priority=2; priority>=0; priority--){
@@ -169,9 +172,9 @@ public class Main{
             System.out.println("Duration:\t" + duration + " seconds");
             System.out.println("Throughput:\t" + throughput + " bps");
             System.out.println("Count packets...");
-            System.out.println("\t...lost:\t" + tpl + " packets (" + ((double)tpl*100/(double)(tpl+tps+tpw)) +"%)");
-            System.out.println("\t...switched:\t" + tps + " packets (" + ((double)tps*100/(double)(tpl+tps+tpw)) +"%)");
-            System.out.println("\t...waited:\t" + tpw + " packets (" + ((double)tpw*100/(double)(tpl+tps+tpw)) +"%)");
+            System.out.println("\t...lost:\t" + tpl + " packets (" + ((double)tpl*100/(double)(tpl+tps)) +"%)");
+            System.out.println("\t...switched:\t" + tps + " packets (" + ((double)tps*100/(double)(tpl+tps)) +"%)");
+            System.out.println("\t...waited:\t" + tpw + " packets (" + ((double)tpw*100/(double)(tpl+tps)) +"%)");
             System.out.println("Average packet...");
             System.out.println("\t...size:\t" + (ave_packet_size.getDouble(1)/ave_packet_size.getDouble(2)) + " bits");
             System.out.println("\t...wait time:\t" + (total_wait_time/(double)tpw) + " seconds");

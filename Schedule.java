@@ -1,3 +1,4 @@
+import java.io.FileWriter;
 import java.util.LinkedList;
 
 public class Schedule{
@@ -104,5 +105,27 @@ public class Schedule{
 
 		}// end of PQ & WFQ
 
+	}
+
+	public void status (LinkedList<Queue> queues, int t) throws Exception{
+
+		FileWriter debugger = new FileWriter("debug.txt", true);
+		int tps = 0, tpw = 0, tpl = 0;
+
+		debugger.write("\n\n-------------------------------");
+		debugger.write("\n  Time:" + t + " ticks");
+		for (int i=0; i<3; i++) {
+			Queue q = queues.get(i);
+			debugger.write("\n\tPriority " + i + ": " + q.size() + " packets");
+			tps = tps + q.packet_swicthed_cnt;
+			tpl = tpl + q.packet_loss_cnt;
+			tpw = tpw + q.packet_wait_cnt;
+		}
+
+		debugger.write("\n\tswitched:" + tps);
+		debugger.write("\n\tlost:" + tpl);
+		debugger.write("\n\twait:" + tpw);
+
+		debugger.close();
 	}
 }
