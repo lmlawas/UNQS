@@ -5,25 +5,21 @@ import java.io.IOException;
 
 public class Packet{
 	
-	/* Attributes */
-	public int id;
-	public int priority;
-	public int protocol;
+	/* Attributes */	
 	public double size;
-	public int timeout;
-	public int wait_time;
+	public int no_of_packets;
+	public int protocol;
+	public int start_time;
 
 	/* Constructors */
 	public Packet(){		
 	}
 
-	public Packet(int id, int priority, int protocol, double size, int timeout, int wait_time){
-		this.id = id;
-		this.priority = priority;
-		this.protocol = protocol;
+	public Packet(double size, int no_of_packets, int protocol, int start_time){		
 		this.size = size;
-		this.timeout = timeout;
-		this.wait_time = wait_time;
+		this.no_of_packets = no_of_packets;
+		this.protocol = protocol;
+		this.start_time = start_time;
 	}
 
 	/* Methods */
@@ -60,5 +56,5 @@ public class Packet{
 			}		
 		}
 		return 0;
-	}
+	}// end of getPriority()
 }
