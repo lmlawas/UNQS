@@ -93,12 +93,12 @@ public class Main{
             /* Convert bps to Bpt */
             // 1b/s * 1B/8b * 0.000000015s/t
             double bandwidth_Bpt = config.getBandwidth() * (SECONDS_PER_TICK/BITS_PER_BYTE);
-            Schedule sched = new Schedule( config.getSchedule(), bandwidth_Bpt );
+            Schedule sched = new Schedule();
 
             /* Create queues */
             System.out.print("Creating queues...");
             for(int i=0; i<3; i++){
-        		queues.add( new Queue(i) );
+        		queues.add( new Queue() );
             }
             System.out.print("done.\n");
 
@@ -108,7 +108,7 @@ public class Main{
             	// check if there are still packets to be added to the queues
             	if(t <= last){
             		Statement stmt1 = con.createStatement();
-					ResultSet flow = stmt1.executeQuery("select idx, BYTES, PACKETS, FIRST_SWITCHED, L4_DST_PORT from `flows-" + 
+					ResultSet flow = stmt1.executeQuery("select BYTES, PACKETS, L4_DST_PORT, FIRST_SWITCHED from `flows-" + 
 						config.getDatestamp() + "v4_" + 
 						config.getInterfaceName() + 
 						"` where FIRST_SWITCHED=" + t + "");
@@ -117,23 +117,22 @@ public class Main{
 	            		while( flow.next() ){		// for all matches
 
 	            			// create packets from flow data
-	            			LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
+	            			//LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
+	            			Packet p = new Packet(flow.getDouble(1), flow.getInt(2), flow.getInt(3), flow.getInt(4));
 
 	            			// add packets to appropriate queue
-							for(Packet p: packets){
-								Queue q = queues.remove(p.priority);
-								q.add(p);
-								queues.add(p.priority, q);
-							}
+							Queue q = queues.remove(p.getPriority(config.getSchedule()));
+							q.add(p);
+							queues.add(p.getPriority(config.getSchedule()), q);
 	            		}
 	            	}
             	}
-            	
+
             	// process high priority queue
-            	sched.process(queues);
+            	sched.process(config.getBandwidth(), config.getSchedule(), t, queues);
             	if(config.getDebug()){
-            		sched.status(queues, t);
-            	}            	
+            		// sched.status(queues, t);
+            	}
 
             	// check if queues are not empty
             	for(int priority=2; priority>=0; priority--){
@@ -146,21 +145,21 @@ public class Main{
             	// increment time
             	t++;
 
-            }while(!empty);// while queues are not empty 
+            }while(!empty || (empty && t < last));// while queues are not empty 
             System.out.print("done.\n");
 
             /* Compute the network performance metrics */
-            double tbs = 0, total_wait_time = 0;
-            int tpl = 0, tps = 0, tpw = 0;
-            for(Queue q: queues){
-            	tbs = tbs + (q.total_buffer_size*BITS_PER_BYTE);	// convert bytes to bits then add to tbs
-            	tpl = tpl + q.packet_loss_cnt;
-            	tps = tps + q.packet_swicthed_cnt;
-            	tpw = tpw + q.packet_wait_cnt;
-            	total_wait_time = total_wait_time + q.total_wait_time;
-            }
-            double duration = (t*SECONDS_PER_TICK);			// convert ticks to seconds
-            double throughput = tbs/duration;            
+            // double tbs = 0, total_wait_time = 0;
+            // int tpl = 0, tps = 0, tpw = 0;
+            // for(Queue q: queues){
+            // 	tbs = tbs + (q.total_buffer_size*BITS_PER_BYTE);	// convert bytes to bits then add to tbs
+            // 	tpl = tpl + q.packet_loss_cnt;
+            // 	tps = tps + q.packet_swicthed_cnt;
+            // 	tpw = tpw + q.packet_wait_cnt;
+            // 	total_wait_time = total_wait_time + q.total_wait_time;
+            // }
+            double duration = (t-first)*SECONDS_PER_TICK;			// convert ticks to seconds
+            double throughput = (sched.packet_switched_size*BITS_PER_BYTE)/duration;            
 
             Statement stmt2 = con.createStatement();
             ResultSet ave_packet_size = stmt2.executeQuery("select SUM(BYTES), SUM(PACKETS) from `flows-" + config.getDatestamp() + "v4_" + config.getInterfaceName() + "`;");
@@ -168,16 +167,19 @@ public class Main{
 
             /* Summarize network performance metrics */
             System.out.println("\n-------------------------------");
+            System.out.println("First switched time:\t" + first);
+            System.out.println("Last switched time:\t" + last);
+			System.out.println("End time:\t" + t);
             System.out.println("Bandwidth:\t" + config.getBandwidth() + " bps");
             System.out.println("Duration:\t" + duration + " seconds");
             System.out.println("Throughput:\t" + throughput + " bps");
             System.out.println("Count packets...");
-            System.out.println("\t...lost:\t" + tpl + " packets (" + ((double)tpl*100/(double)(tpl+tps)) +"%)");
-            System.out.println("\t...switched:\t" + tps + " packets (" + ((double)tps*100/(double)(tpl+tps)) +"%)");
-            System.out.println("\t...waited:\t" + tpw + " packets (" + ((double)tpw*100/(double)(tpl+tps)) +"%)");
+            System.out.println("\t...lost:\t" + sched.packet_loss_cnt + " packets (" + ((double)sched.packet_loss_cnt*100/(double)(sched.packet_loss_cnt+sched.packet_swicthed_cnt)) +"%)");
+            System.out.println("\t...switched:\t" + sched.packet_swicthed_cnt + " packets (" + ((double)sched.packet_swicthed_cnt*100/(double)(sched.packet_loss_cnt+sched.packet_swicthed_cnt)) +"%)");
+            System.out.println("\t...waited:\t" + sched.packet_wait_cnt + " packets (" + ((double)sched.packet_wait_cnt*100/(double)(sched.packet_loss_cnt+sched.packet_swicthed_cnt)) +"%)");
             System.out.println("Average packet...");
             System.out.println("\t...size:\t" + (ave_packet_size.getDouble(1)/ave_packet_size.getDouble(2)) + " bits");
-            System.out.println("\t...wait time:\t" + (total_wait_time/(double)tpw) + " seconds");
+            System.out.println("\t...wait time:\t" + (sched.total_wait_time/(double)sched.packet_wait_cnt) + " seconds");
 
         }catch (Exception e) {
         	System.out.print("error connecting.\n");
@@ -187,16 +189,16 @@ public class Main{
 
 	}// end of main function	
 
-	public static LinkedList<Packet> createPackets(int idx, double size, int no_of_packets, int protocol, int timeout, int schedule_type){
-		LinkedList<Packet> packets = new LinkedList<Packet>();
+	// public static LinkedList<Packet> createPackets(int idx, double size, int no_of_packets, int protocol, int timeout, int schedule_type){
+	// 	LinkedList<Packet> packets = new LinkedList<Packet>();
 
-		for(int i=0; i<no_of_packets; i++){
-			Packet p = new Packet(idx, 0, protocol, size/no_of_packets, timeout, 0);
-			p.priority = p.getPriority(schedule_type);
-			packets.add(p);
-		}
+	// 	for(int i=0; i<no_of_packets; i++){
+	// 		Packet p = new Packet(idx, 0, protocol, size/no_of_packets, timeout, 0);
+	// 		p.priority = p.getPriority(schedule_type);
+	// 		packets.add(p);
+	// 	}
 
-		return packets;
-	}
+	// 	return packets;
+	// }
 
 }
