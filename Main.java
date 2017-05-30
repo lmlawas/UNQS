@@ -104,29 +104,30 @@ public class Main{
 
             /* Schedule packets */
             System.out.print("Scheduling packets...");
+            Statement stmt1 = con.createStatement();
+            ResultSet flow;
+            LinkedList<Packet> packets = new LinkedList<Packet>();
             do{
             	// check if there are still packets to be added to the queues
             	if(t <= last){
-            		Statement stmt1 = con.createStatement();
-					ResultSet flow = stmt1.executeQuery("select idx, BYTES, PACKETS, FIRST_SWITCHED, L4_DST_PORT from `flows-" + 
+
+					flow = stmt1.executeQuery("select idx, BYTES, PACKETS, FIRST_SWITCHED, L4_DST_PORT from `flows-" + 
 						config.getDatestamp() + "v4_" + 
 						config.getInterfaceName() + 
 						"` where FIRST_SWITCHED=" + t + "");
 
-	            	if( flow.next() != false ){		// if a match or matches to time t is found
-	            		while( flow.next() ){		// for all matches
+            		while( flow.next() ){		// for all matches
 
-	            			// create packets from flow data
-	            			LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
+            			// create packets from flow data
+            			packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
 
-	            			// add packets to appropriate queue
-							for(Packet p: packets){
-								Queue q = queues.remove(p.priority);
-								q.add(p);
-								queues.add(p.priority, q);
-							}
-	            		}
-	            	}
+            			// add packets to appropriate queue
+						for(Packet p: packets){
+							Queue q = queues.remove(p.priority);
+							q.add(p);
+							queues.add(p.priority, q);
+						}
+            		}
             	}
             	
             	// process high priority queue
