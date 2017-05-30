@@ -113,19 +113,17 @@ public class Main{
 						config.getInterfaceName() + 
 						"` where FIRST_SWITCHED=" + t + "");
 
-	            	if( flow.next() != false ){		// if a match or matches to time t is found
-	            		while( flow.next() ){		// for all matches
+            		while( flow.next() ){		// for all matches
 
-	            			// create packets from flow data
-	            			//LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
-	            			Packet p = new Packet(flow.getDouble(1), flow.getInt(2), flow.getInt(3), flow.getInt(4));
+            			// create packets from flow data
+            			//LinkedList<Packet> packets = createPackets(flow.getInt(1), flow.getDouble(2), flow.getInt(3), flow.getInt(5), (int)(config.getTimeout()/SECONDS_PER_TICK), config.getSchedule());
+            			Packet p = new Packet(flow.getDouble(1), flow.getInt(2), flow.getInt(3), flow.getInt(4));
 
-	            			// add packets to appropriate queue
-							Queue q = queues.remove(p.getPriority(config.getSchedule()));
-							q.add(p);
-							queues.add(p.getPriority(config.getSchedule()), q);
-	            		}
-	            	}
+            			// add packets to appropriate queue
+						Queue q = queues.remove(p.getPriority(config.getSchedule()));
+						q.add(p);
+						queues.add(p.getPriority(config.getSchedule()), q);
+            		}
             	}
 
             	// process high priority queue
